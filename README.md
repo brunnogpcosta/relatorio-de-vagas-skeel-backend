@@ -105,8 +105,8 @@ Exemplo de Resposta:
 
 ## Configuração e Execução
 - Certifique-se de ter o Node.js instalado em seu ambiente.
-- Execute o comando npm install para instalar as dependências necessárias.
-- Execute o comando node index.js para iniciar o serviço na porta 3000.
+- Execute o comando ```yarn``` para instalar as dependências necessárias.
+- Execute o comando ```node index.js``` para iniciar o serviço na porta 3000.
 - A API estará disponível em http://localhost:3000.
 - Certifique-se de que os dados de trabalho estão presentes em um arquivo jobs.json no mesmo diretório do arquivo do servidor.
 
