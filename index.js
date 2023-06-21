@@ -1,5 +1,7 @@
 
 const express = require('express')
+const { format } = require('date-fns');
+
 const app = express()
 const port = 3000
 const data = require('./jobs.json')
@@ -14,12 +16,52 @@ app.use(cors());
 
 
 app.get('/positions', (req, res) => {
-    return res.send({"jobs": data})
-})
+    const { format } = require('date-fns');
+
+    const page = parseInt(req.query.page) || 1; // Página atual (padrão: 1)
+    const limit = parseInt(req.query.limit) || 10; // Quantidade de itens por página (padrão: 10)
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const paginatedData = data.slice(startIndex, endIndex).map(item => ({
+        ...item,
+        date: format(new Date(item.date), 'dd/MM/yyyy', { locale: require('date-fns/locale/pt-BR') })
+    }));
+
+    const response = {
+        currentPage: page,
+        totalPages: Math.ceil(data.length / limit),
+        totalItems: data.length,
+        itemsPerPage: limit,
+        jobs: paginatedData
+    };
+
+    return res.json(response);
+
+});
+
+
+app.get('/options', (req, res) => {
+    const type = req.query.type
+    const result = data.map(item => item[`${type}`]);
+    const orderResult = result.sort((a, b) => a.normalize("NFD").replace(/[\u0300-\u036f]/g, "").localeCompare(b.normalize("NFD").replace(/[\u0300-\u036f]/g, "")));
+
+    return res.json(orderResult);
+});
+
 
 app.post('/positions/filter', (req, res) => {
     const { searchString, selectedLocales, selectedPositions, selectedExperiences } = req.body;
-    const result = data.filter(dt => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    const filteredData = data.filter(dt => {
         const localeMatch = selectedLocales.length === 0 || selectedLocales.includes(dt.locale);
         const positionMatch = selectedPositions.length === 0 || selectedPositions.includes(dt.position);
         const experienceMatch = selectedExperiences.length === 0 || selectedExperiences.includes(dt.level);
@@ -28,8 +70,25 @@ app.post('/positions/filter', (req, res) => {
         return localeMatch && positionMatch && experienceMatch && searchMatch;
     });
 
-    res.json({"jobs": result});
+    data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const paginatedData = data.slice(startIndex, endIndex).map(item => ({
+        ...item,
+        date: format(new Date(item.date), 'dd/MM/yyyy', { locale: require('date-fns/locale/pt-BR') })
+    }));
+
+
+    const response = {
+        currentPage: page,
+        totalPages: Math.ceil(filteredData.length / limit),
+        totalItems: filteredData.length,
+        itemsPerPage: limit,
+        jobs: paginatedData
+    };
+
+    res.json(response);
 });
+
 
 app.listen(port, () => {
     console.log(`service started on port ${port}`)
