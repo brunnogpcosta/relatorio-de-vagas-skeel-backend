@@ -18,29 +18,29 @@ app.use(cors());
 app.get('/positions', (req, res) => {
     const { format } = require('date-fns');
 
-    const page = parseInt(req.query.page) || 1; // Página atual (padrão: 1)
-    const limit = parseInt(req.query.limit) || 10; // Quantidade de itens por página (padrão: 10)
-
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 10; 
+    
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-
+    
     data.sort((a, b) => new Date(b.date) - new Date(a.date));
-
+    
     const paginatedData = data.slice(startIndex, endIndex).map(item => ({
-        ...item,
-        date: format(new Date(item.date), 'dd/MM/yyyy', { locale: require('date-fns/locale/pt-BR') })
+      ...item,
+      date: format(new Date(item.date), 'dd/MM/yyyy', { locale: require('date-fns/locale/pt-BR') })
     }));
-
+    
     const response = {
-        currentPage: page,
-        totalPages: Math.ceil(data.length / limit),
-        totalItems: data.length,
-        itemsPerPage: limit,
-        jobs: paginatedData
+      currentPage: page,
+      totalPages: Math.ceil(data.length / limit),
+      totalItems: data.length,
+      itemsPerPage: limit,
+      jobs: paginatedData
     };
-
+    
     return res.json(response);
-
+    
 });
 
 
@@ -56,10 +56,11 @@ app.get('/options', (req, res) => {
 app.post('/positions/filter', (req, res) => {
     const { searchString, selectedLocales, selectedPositions, selectedExperiences } = req.body;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 10000;
 
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
+    
 
     const filteredData = data.filter(dt => {
         const localeMatch = selectedLocales.length === 0 || selectedLocales.includes(dt.locale);
@@ -70,13 +71,7 @@ app.post('/positions/filter', (req, res) => {
         return localeMatch && positionMatch && experienceMatch && searchMatch;
     });
 
-    data.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    const paginatedData = data.slice(startIndex, endIndex).map(item => ({
-        ...item,
-        date: format(new Date(item.date), 'dd/MM/yyyy', { locale: require('date-fns/locale/pt-BR') })
-    }));
-
+    const paginatedData = filteredData.slice(startIndex, endIndex);
 
     const response = {
         currentPage: page,
